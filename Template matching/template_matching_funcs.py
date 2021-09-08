@@ -45,7 +45,10 @@ def template_matching(image, template, method=cv2.TM_CCORR):
 
 def thresholding(image):
     image = image.astype(np.uint8)
-    otsu_threshold, image_result = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    thresh = image.mean()
+    max_value = image.max()
+#     otsu_threshold, image_result = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    otsu_threshold, image_result = cv2.threshold(image, thresh, max_value, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return image_result
 
 
@@ -83,8 +86,29 @@ def get_Fourier_coeffs_and_kernel(image, order, kernel_size):
     final_kernel = get_img_from_fig(fig, dpi=kernel_size)  
     final_kernel = final_kernel / 255
     final_kernel = abs(final_kernel - 1)
-    final_kernel = (final_kernel - np.mean(final_kernel)) / np.std(final_kernel)
+#     final_kernel = (final_kernel - np.mean(final_kernel)) / np.std(final_kernel)
+
 #     plt.figure(figsize=(3, 3))
 #     plt.imshow(final_kernel)
 #     plt.show()
     return coeffs, final_kernel
+
+
+# def get_kernel_baseline(image, template, order, kernel_size,
+#                        morph_open, morph_close, dilate):
+#     img_match = template_matching(image=image, template=template, method=cv2.TM_CCORR)
+#     img_thresh = thresholding(img_match)
+    
+#     kern = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))  # np.ones((5,5),np.uint8)
+#     if morph_open:
+#         img_thresh = cv2.morphologyEx(img_thresh, cv2.MORPH_OPEN, kern)
+#     if morph_close:
+#         img_thresh = cv2.morphologyEx(img_thresh, cv2.MORPH_CLOSE, kern)
+#     if dilate:
+#         img_thresh = cv2.dilate(img_thresh,kern,iterations = 1)
+    
+#     plt.imshow(img_thresh, cmap='gray')
+#     plt.show()
+#     _, kernel = get_Fourier_coeffs_and_kernel(img_thresh, order=order, kernel_size=kernel_size)
+    
+#     return kernel
