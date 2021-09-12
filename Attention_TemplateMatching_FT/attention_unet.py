@@ -96,6 +96,7 @@ class AttU_Net(nn.Module):
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Att3 = Attention_block(F_g=128,F_l=128,F_int=64)
         self.Up_conv3 = conv_block(ch_in=256, ch_out=128)
+        self.Att_out = nn.Conv2d(128,output_ch,kernel_size=1,stride=1,padding=0)
         
         self.Up2 = up_conv(ch_in=128,ch_out=64)
         self.Att2 = Attention_block(F_g=64,F_l=64,F_int=32)
@@ -136,6 +137,7 @@ class AttU_Net(nn.Module):
         x2 = self.Att3(g=d3,x=x2)
         d3 = torch.cat((x2,d3),dim=1)
         d3 = self.Up_conv3(d3)
+        att_out = self.Att_out(d3)
 
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2,x=x1)

@@ -15,8 +15,8 @@ class ShapeDataset(Dataset):
         self.images_folder = images_folder
         self.masks_folder = masks_folder
 
-        self.images_names = np.sort(os.listdir(images_folder))#[idx:idx+1] 
-        self.masks_names = np.sort(os.listdir(masks_folder))
+        self.images_names = np.sort(os.listdir(images_folder))[::10] 
+        self.masks_names = np.sort(os.listdir(masks_folder))[::10]  
         
         self.img_transform = img_transform
         self.masks_transform = masks_transform
