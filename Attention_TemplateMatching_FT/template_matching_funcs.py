@@ -45,15 +45,16 @@ def template_matching(image, template, method=cv2.TM_CCORR):
 
 def thresholding(image, thresh_coeff = None, otsu=False):
     max_value = np.max(image)
+    avg = np.mean(np.unique(image))
     if thresh_coeff == None:
-        thresh_coeff = max_value / 3
-    thresh = thresh_coeff * np.mean(np.unique(image))
+        thresh_coeff = avg #max_value / 3
+    thresh = thresh_coeff * avg
     
-    print('avg:', np.mean(np.unique(image)))
-    print('max:', max_value) 
-    plt.imshow(image)
-    plt.title('Before thresholding')
-    plt.show()
+#     print('avg:', np.mean(np.unique(image)))
+#     print('max:', max_value) 
+#     plt.imshow(image)
+#     plt.title('Before thresholding')
+#     plt.show()
     
     if otsu: 
         image = image.astype(np.uint8)
@@ -63,41 +64,50 @@ def thresholding(image, thresh_coeff = None, otsu=False):
     return image_result
 
 def get_Fourier_coeffs_and_kernel(image, order, kernel_size):
-    imgray = image.astype(np.uint8)
+    a = image.shape[0]
+    b = image.shape[1]
 #     imgray = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2GRAY)
 #     imgray = image
 #     img_max = imgray.max()
 #     img_mean = imgray.mean()
 #     ret,thresh = cv2.threshold(imgray, img_mean, img_max, 0)
-    contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    contours_new = np.vstack(contours).squeeze()
-    coeffs = elliptic_fourier_descriptors(contours_new, order=order)
+    try:
+        imgray = image.astype(np.uint8)
+        contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours_new = np.vstack(contours).squeeze()
+        coeffs = elliptic_fourier_descriptors(contours_new, order=order)
     
-    locus = (0.0, 0.0)
-    m = order
-    xt = np.ones((m,)) * locus[0]
-    yt = np.ones((m,)) * locus[1]
+        locus = (0.0, 0.0)
+        m = order
+        xt = np.ones((m,)) * locus[0]
+        yt = np.ones((m,)) * locus[1]
 
-    t = np.linspace(0, 1.0, m)
+        t = np.linspace(0, 1.0, m)
 
-    for n in range(coeffs.shape[0]):
-        yt += (coeffs[n, 0] * np.cos(2 * (n + 1) * np.pi * t)) + (
-            coeffs[n, 1] * np.sin(2 * (n + 1) * np.pi * t)
-        )
-        xt += (coeffs[n, 2] * np.cos(2 * (n + 1) * np.pi * t)) + (
-            coeffs[n, 3] * np.sin(2 * (n + 1) * np.pi * t)
-        )
-    a = image.shape[0]
-    b = image.shape[1]
-    fig = plt.figure(figsize=(a/b, b/b))
-    ax = fig.add_subplot(111)
-    ax.plot(xt, yt, 'black', linewidth=3)
-    ax.axis('off')
-    plt.close(fig)
-
-    kernel = get_img_from_fig(fig, dpi=kernel_size)  
-    kernel = kernel / kernel.max()
-    kernel = abs(kernel - 1)
-#     kernel = (kernel - np.mean(kernel)) / np.std(kernel)
-
+        for n in range(coeffs.shape[0]):
+            yt += (coeffs[n, 0] * np.cos(2 * (n + 1) * np.pi * t)) + (
+                coeffs[n, 1] * np.sin(2 * (n + 1) * np.pi * t)
+            )
+            xt += (coeffs[n, 2] * np.cos(2 * (n + 1) * np.pi * t)) + (
+                coeffs[n, 3] * np.sin(2 * (n + 1) * np.pi * t)
+            )
+            
+        fig = plt.figure(figsize=(a/b, b/b))
+        ax = fig.add_subplot(111)
+        ax.plot(xt, yt, 'black', linewidth=3)
+        ax.axis('off')
+        plt.close(fig)
+   
+        kernel = get_img_from_fig(fig, dpi=kernel_size)  
+        kernel = kernel / kernel.max()
+        kernel = abs(kernel - 1)
+        print('Real kernel')
+    #     kernel = (kernel - np.mean(kernel)) / np.std(kernel)
+    except:
+        
+        kernel = cv2.resize(image, (b//b * kernel_size, int(a/b * kernel_size)), interpolation = cv2.INTER_AREA)
+#         kernel = image.resize((int(a/b * kernel_size), b//b * kernel_size))
+        coeffs=0
+#         print('Fake kernel')
+        
     return coeffs, kernel

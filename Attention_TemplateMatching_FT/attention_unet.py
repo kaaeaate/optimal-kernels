@@ -20,7 +20,6 @@ class conv_block(nn.Module):
     def forward(self,x):
         x = self.conv(x)
         return x
-
     
 class up_conv(nn.Module):
     def __init__(self,ch_in,ch_out):
@@ -88,15 +87,19 @@ class AttU_Net(nn.Module):
         self.Up5 = up_conv(ch_in=1024,ch_out=512)
         self.Att5 = Attention_block(F_g=512,F_l=512,F_int=256)
         self.Up_conv5 = conv_block(ch_in=1024, ch_out=512)
+#         self.conv = conv_block(512, 128)
+#         self.Att_out = nn.Conv2d(128,3,kernel_size=1,stride=1,padding=0)
 
         self.Up4 = up_conv(ch_in=512,ch_out=256)
         self.Att4 = Attention_block(F_g=256,F_l=256,F_int=128)
         self.Up_conv4 = conv_block(ch_in=512, ch_out=256)
+        self.conv = conv_block(256, 64)
+        self.Att_out = nn.Conv2d(64,3,kernel_size=1,stride=1,padding=0)
         
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Att3 = Attention_block(F_g=128,F_l=128,F_int=64)
         self.Up_conv3 = conv_block(ch_in=256, ch_out=128)
-        self.Att_out = nn.Conv2d(128,output_ch,kernel_size=1,stride=1,padding=0)
+#         self.Att_out = nn.Conv2d(128,3,kernel_size=1,stride=1,padding=0)
         
         self.Up2 = up_conv(ch_in=128,ch_out=64)
         self.Att2 = Attention_block(F_g=64,F_l=64,F_int=32)
@@ -126,18 +129,22 @@ class AttU_Net(nn.Module):
         x4 = self.Att5(g=d5,x=x4)
         d5 = torch.cat((x4,d5),dim=1)        
         d5 = self.Up_conv5(d5)
+#         d_att = self.conv(d5)
+#         att_out = self.Att_out(d_att)
         
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)
 #         print(x3.shape)
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
-
+        d_att = self.conv(d4)
+        att_out = self.Att_out(d_att)
+        
         d3 = self.Up3(d4)
         x2 = self.Att3(g=d3,x=x2)
         d3 = torch.cat((x2,d3),dim=1)
         d3 = self.Up_conv3(d3)
-        att_out = self.Att_out(d3)
+#         att_out = self.Att_out(d3)
 
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2,x=x1)

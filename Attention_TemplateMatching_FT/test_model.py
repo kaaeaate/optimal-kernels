@@ -27,6 +27,7 @@ class TestModel(nn.Module):
         
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Att3 = Attention_block(F_g=128,F_l=128,F_int=64)
+        self.Att_out = nn.Conv2d(128,3,kernel_size=1,stride=1,padding=0)
 
 
     def forward(self,x):
@@ -58,5 +59,6 @@ class TestModel(nn.Module):
 
         d3 = self.Up3(d4)
         x2 = self.Att3(g=d3,x=x2)
+        att_out = self.Att_out(d3)
 
-        return x2
+        return att_out #x2
