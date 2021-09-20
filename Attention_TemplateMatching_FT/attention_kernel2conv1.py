@@ -114,7 +114,7 @@ class AttU_Net(nn.Module):
         self.Att4 = Attention_block(F_g=256,F_l=256,F_int=128)
         self.Up_conv4 = conv_block(ch_in=512, ch_out=256)
         # to do diff channels
-        self.conv_att = conv_block(256, 64)
+#         self.conv_att = conv_block(256, 64)
 #         self.Att_out = nn.Conv2d(64,3,kernel_size=1,stride=1,padding=0)
         #-----------
         self.Conv_upd = kernel_block(ch_in=img_ch,ch_out=64)
@@ -159,12 +159,11 @@ class AttU_Net(nn.Module):
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
 #         att_out = self.Att_out(d_att)
-#         x1_upd = self.Conv_upd(x)
         
         #----------------
         kernel_shape = self.Conv_upd.conv[0].weight.data.shape
         kernel = kernel_torch(x3[0][:64], kernel_shape[-1])
-        kernel_new = torch.zeros_like(torch.rand(kernel_shape[1], kernel_shape[0], kernel_shape[2], kernel_shape[3])).requires_grad_()
+        kernel_new = torch.zeros_like(torch.rand(kernel_shape[1], kernel_shape[0], kernel_shape[2], kernel_shape[3]))
         for ch in range(kernel_new.shape[0]):
             kernel_new[ch] = kernel
         kernel_new = kernel_new.permute(1,0,2,3)
