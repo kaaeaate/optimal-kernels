@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
 import torchvision.transforms.functional as trans
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class conv_block(nn.Module):
@@ -35,9 +37,9 @@ class up_conv(nn.Module):
         return x
 
     
-class kernel_block(nn.Module):
+class kernel_block_20(nn.Module):
     def __init__(self,ch_in,ch_out):
-        super(kernel_block,self).__init__()
+        super(kernel_block_20,self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(ch_in, ch_out, kernel_size=20, padding=8),
             nn.BatchNorm2d(ch_out),
@@ -50,6 +52,21 @@ class kernel_block(nn.Module):
         x = self.conv(x)
         return x
     
+
+class kernel_block_10(nn.Module):
+    def __init__(self,ch_in,ch_out):
+        super(kernel_block_10,self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(ch_in, ch_out, kernel_size=10, padding=4),
+            nn.BatchNorm2d(ch_out),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(ch_out, ch_out, kernel_size=4, padding=5, dilation=3),
+            nn.BatchNorm2d(ch_out),
+            nn.ReLU(inplace=True)
+        )
+    def forward(self,x):
+        x = self.conv(x)
+        return x
     
 
 class Attention_block(nn.Module):
@@ -83,12 +100,12 @@ class Attention_block(nn.Module):
 
 
 def kernel_torch(att_map, kernel_size):
-#     uniq_els = torch.unique(att_map)
-    mean = float(torch.mean(att_map))
+    uniq_els = torch.unique(att_map.detach())
+    mean = float(torch.mean(uniq_els))
     m = torch.nn.Threshold(mean, 0., inplace=False)
     thresh = m(att_map)
-    height = att_map.shape[-2]
-    width = att_map.shape[-1]
+#     height = att_map.shape[-2]
+#     width = att_map.shape[-1]
     kernel_resize = trans.resize(thresh, kernel_size)
     return kernel_resize
 
@@ -117,7 +134,7 @@ class AttU_Net(nn.Module):
 #         self.conv_att = conv_block(256, 64)
 #         self.Att_out = nn.Conv2d(64,3,kernel_size=1,stride=1,padding=0)
         #-----------
-        self.Conv_upd = kernel_block(ch_in=img_ch,ch_out=64)
+        self.Conv_upd = kernel_block_20(ch_in=img_ch,ch_out=64)
         #-----------
         
         self.Up3 = up_conv(ch_in=256,ch_out=128)
@@ -155,19 +172,24 @@ class AttU_Net(nn.Module):
         
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)
-#         print(x3.shape)
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
 #         att_out = self.Att_out(d_att)
         
         #----------------
-        kernel_shape = self.Conv_upd.conv[0].weight.data.shape
-        kernel = kernel_torch(x3[0][:64], kernel_shape[-1])
-        kernel_new = torch.zeros_like(torch.rand(kernel_shape[1], kernel_shape[0], kernel_shape[2], kernel_shape[3]))
+        kernel_shape = self.Conv_upd.conv[0].weight.data.shape   # [64, 3, 20, 20]
+        # x3(Att4) shape: [1, 256, 100, 100]
+#         kernel = kernel_torch(x3[0][:64], kernel_shape[-1])
+        kernel_new = torch.zeros(kernel_shape[1], kernel_shape[0], 
+                                 kernel_shape[2], kernel_shape[3], requires_grad=True).cuda()
         for ch in range(kernel_new.shape[0]):
-            kernel_new[ch] = kernel
+            kernel_new[ch] += kernel_torch(x3[0][64*ch:64*(ch+1)], kernel_shape[-1])
         kernel_new = kernel_new.permute(1,0,2,3)
-        self.Conv_upd.conv[0].weight.data = kernel_new.cuda()
+        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10,10))
+        ax0.imshow(x[0].permute(1,2,0).cpu().detach().numpy())
+        ax1.imshow(kernel_new[0].permute(1,2,0).cpu().detach().numpy())
+        plt.show()
+        self.Conv_upd.conv[0].weight.data = kernel_new
         x1_upd = self.Conv_upd(x)
         #----------------
         
@@ -178,7 +200,7 @@ class AttU_Net(nn.Module):
 
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2,x=x1_upd)
-        d2 = torch.cat((x1_upd,d2),dim=1)
+        d2 = torch.cat((x1,d2),dim=1)
         d2 = self.Up_conv2(d2)
 
         d1 = self.Conv_1x1(d2)
