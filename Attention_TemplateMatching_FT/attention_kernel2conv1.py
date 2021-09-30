@@ -53,14 +53,27 @@ class kernel_block_20(nn.Module):
         return x
     
 
-class kernel_block_10(nn.Module):
+class kernel_block_9(nn.Module):
     def __init__(self,ch_in,ch_out):
-        super(kernel_block_10,self).__init__()
+        super(kernel_block_9,self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(ch_in, ch_out, kernel_size=10, padding=4),
+            nn.Conv2d(ch_in, ch_out, kernel_size=9, padding=4),
             nn.BatchNorm2d(ch_out),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(ch_out, ch_out, kernel_size=4, padding=5, dilation=3),
+            nn.ReLU(inplace=True)
+#             nn.Conv2d(ch_out, ch_out, kernel_size=4, padding=5, dilation=3),
+#             nn.BatchNorm2d(ch_out),
+#             nn.ReLU(inplace=True)
+        )
+    def forward(self,x):
+        x = self.conv(x)
+        return x
+    
+    
+class kernel_block_11(nn.Module):
+    def __init__(self,ch_in,ch_out):
+        super(kernel_block_11,self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(ch_in, ch_out, kernel_size=11, stride=1, padding=5),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
         )
@@ -134,7 +147,8 @@ class AttU_Net(nn.Module):
 #         self.conv_att = conv_block(256, 64)
 #         self.Att_out = nn.Conv2d(64,3,kernel_size=1,stride=1,padding=0)
         #-----------
-        self.Conv_upd = kernel_block_20(ch_in=img_ch,ch_out=64)
+        self.Conv_upd_x1 = kernel_block_11(ch_in=img_ch,ch_out=64)
+#         self.Conv_upd_x2 = kernel_block_9(ch_in=64,ch_out=128)
         #-----------
         
         self.Up3 = up_conv(ch_in=256,ch_out=128)
@@ -177,20 +191,20 @@ class AttU_Net(nn.Module):
 #         att_out = self.Att_out(d_att)
         
         #----------------
-        kernel_shape = self.Conv_upd.conv[0].weight.data.shape   # [64, 3, 20, 20]
+        kernel_shape = self.Conv_upd_x1.conv[0].weight.data.shape   # [64, 3, 20, 20]
         # x3(Att4) shape: [1, 256, 100, 100]
-#         kernel = kernel_torch(x3[0][:64], kernel_shape[-1])
         kernel_new = torch.zeros(kernel_shape[1], kernel_shape[0], 
                                  kernel_shape[2], kernel_shape[3], requires_grad=True).cuda()
         for ch in range(kernel_new.shape[0]):
             kernel_new[ch] += kernel_torch(x3[0][64*ch:64*(ch+1)], kernel_shape[-1])
         kernel_new = kernel_new.permute(1,0,2,3)
-        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10,10))
-        ax0.imshow(x[0].permute(1,2,0).cpu().detach().numpy())
-        ax1.imshow(kernel_new[0].permute(1,2,0).cpu().detach().numpy())
-        plt.show()
-        self.Conv_upd.conv[0].weight.data = kernel_new
-        x1_upd = self.Conv_upd(x)
+#         fig, ax = plt.subplots(4, 5, figsize=(15,15))
+#         for i in range(1, 20):
+#             ax[0, 0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
+#             ax[i//5, i%5].imshow(kernel_new[i].permute(1,2,0).cpu().detach().numpy())
+#         plt.show()
+        self.Conv_upd_x1.conv[0].weight.data = kernel_new
+        x1_upd = self.Conv_upd_x1(x)
         #----------------
         
         d3 = self.Up3(d4)
