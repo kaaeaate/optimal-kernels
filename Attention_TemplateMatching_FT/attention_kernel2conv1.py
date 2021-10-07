@@ -60,7 +60,7 @@ class kernel_block_9(nn.Module):
             nn.Conv2d(ch_in, ch_out, kernel_size=9, padding=4),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
-#             nn.Conv2d(ch_out, ch_out, kernel_size=4, padding=5, dilation=3),
+#             nn.Conv2d(ch_out, ch_out, kernel_size=3, padding=1),
 #             nn.BatchNorm2d(ch_out),
 #             nn.ReLU(inplace=True)
         )
@@ -147,7 +147,7 @@ class AttU_Net(nn.Module):
 #         self.conv_att = conv_block(256, 64)
 #         self.Att_out = nn.Conv2d(64,3,kernel_size=1,stride=1,padding=0)
         #-----------
-        self.Conv_upd_x1 = kernel_block_11(ch_in=img_ch,ch_out=64)
+        self.Conv_upd_x1 = kernel_block_9(ch_in=img_ch,ch_out=64)
 #         self.Conv_upd_x2 = kernel_block_9(ch_in=64,ch_out=128)
         #-----------
         
