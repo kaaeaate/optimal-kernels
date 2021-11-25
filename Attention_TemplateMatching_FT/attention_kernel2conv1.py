@@ -73,7 +73,7 @@ class kernel_block_11(nn.Module):
     def __init__(self,ch_in,ch_out):
         super(kernel_block_11,self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(ch_in, ch_out, kernel_size=11, stride=1, padding=5),
+            nn.Conv2d(ch_in, ch_out, kernel_size=15, stride=1, padding=7),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
         )
@@ -147,7 +147,7 @@ class AttU_Net(nn.Module):
 #         self.conv_att = conv_block(256, 64)
 #         self.Att_out = nn.Conv2d(64,3,kernel_size=1,stride=1,padding=0)
         #-----------
-        self.Conv_upd_x1 = kernel_block_9(ch_in=img_ch,ch_out=64)
+        self.Conv_upd_x1 = kernel_block_11(ch_in=img_ch,ch_out=64)
 #         self.Conv_upd_x2 = kernel_block_9(ch_in=64,ch_out=128)
         #-----------
         
@@ -198,6 +198,8 @@ class AttU_Net(nn.Module):
         for ch in range(kernel_new.shape[0]):
             kernel_new[ch] += kernel_torch(x3[0][64*ch:64*(ch+1)], kernel_shape[-1])
         kernel_new = kernel_new.permute(1,0,2,3)
+        kernel_new = (kernel_new - kernel_new.mean()) / kernel_new.std()
+#         kernel_new = kernel_new*0.2 - 0.001
 #         fig, ax = plt.subplots(4, 5, figsize=(15,15))
 #         for i in range(1, 20):
 #             ax[0, 0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
