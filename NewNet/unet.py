@@ -10,12 +10,20 @@ def double_conv(in_channels, out_channels):
     )   
 
 
+def deform_conv(in_channels, out_channels):
+    return nn.Sequential(
+        nn.Conv2d(in_channels, out_channels, 9, padding=4),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(out_channels, out_channels, 3, padding=1),
+        nn.ReLU(inplace=True)
+    )
+
 class UNet(nn.Module):
 
-    def __init__(self, n_class):
+    def __init__(self, n_in, n_class):
         super().__init__()
                 
-        self.dconv_down1 = double_conv(3, 64)
+        self.dconv_down1 = double_conv(n_in, 64)
         self.dconv_down2 = double_conv(64, 128)
         self.dconv_down3 = double_conv(128, 256)
         self.dconv_down4 = double_conv(256, 512)        
