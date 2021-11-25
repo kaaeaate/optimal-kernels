@@ -6,7 +6,9 @@ import os
 import albumentations as A
 import cv2
 from torchvision.transforms import ToTensor
+import albumentations as A
 
+from data_preprocessing import get_lips_twins, get_train_test_dataset
 
 class Birds_Dataset(Dataset):
     def __init__(self, 
@@ -201,7 +203,7 @@ class OneImageDataset(Dataset):
         return item_image
 
 
-class MNISTDataset(Dataset):
+class MNISTBinarDataset(Dataset):
     def __init__(self, images_folder, masks_folder, 
                  img_transform=None, masks_transform=None):
         super(Dataset, self).__init__()
@@ -233,3 +235,37 @@ class MNISTDataset(Dataset):
             item_mask = self.masks_transform(item_mask)
 
         return item_image, item_mask
+
+    
+class LipstickDataset(Dataset):
+    def __init__(self, images_folder, masks_folder, 
+                 transform=None):
+        super(Dataset, self).__init__()
+        
+        self.images_folder = images_folder
+        self.masks_folder = masks_folder
+
+        self.images_names = np.sort(os.listdir(images_folder))
+        self.masks_names = np.sort(os.listdir(masks_folder))  
+        
+        self.transform = transform
+        self.to_tensor = ToTensor()
+
+    def __len__(self):
+        return len(self.images_names)
+    
+    def __getitem__(self, idx):
+        item_image = np.asarray(Image.open(os.path.join(self.images_folder,
+                                            self.images_names[idx])))
+        item_mask = np.asarray(Image.open(os.path.join(self.masks_folder,
+                                              self.masks_names[idx])))[:,:,1]
+        
+        if self.transform is not None:
+            transformed = self.transform(image=item_image, mask=item_mask)
+            item_image = transformed["image"]
+            item_mask = transformed["mask"]
+        
+        item_image = self.to_tensor(item_image.copy())
+        item_mask = torch.from_numpy(item_mask.copy()).long()
+
+        return item_image, item_mask    
