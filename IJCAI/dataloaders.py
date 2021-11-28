@@ -238,6 +238,43 @@ class MNISTBinarDataset(Dataset):
         return item_image, item_mask
 
     
+class PancreasDataset(Dataset):
+    def __init__(self, images_folder, masks_folder, 
+                 img_transform=None, masks_transform=None):
+        super(Dataset, self).__init__()
+        
+        self.images_folder = images_folder
+        self.masks_folder = masks_folder
+
+        self.images_names = np.sort(os.listdir(images_folder))
+        self.masks_names = np.sort(os.listdir(masks_folder))
+        
+        self.img_transform = img_transform
+        self.masks_transform = masks_transform
+
+    def __len__(self):
+        return len(self.images_names)
+    
+    def __getitem__(self, idx):
+        item_image = Image.open(os.path.join(self.images_folder,
+                                            self.images_names[idx])).convert('RGB')
+        item_mask = cv2.imread(os.path.join(self.masks_folder,
+                                              self.masks_names[idx]))
+        
+        item_mask2 = np.rot90(np.fliplr(item_mask),2)
+        item_mask = np.where(item_mask2>0, 1, 0)
+        
+        SEED = np.random.randint(123456789)
+        if self.img_transform is not None:
+            random.seed(SEED)
+            item_image = self.img_transform(item_image)
+        if self.masks_transform is not None:  
+            random.seed(SEED)
+            item_mask = self.masks_transform(item_mask)
+
+        return item_image, item_mask
+    
+    
 class LipstickDataset(Dataset):
     def __init__(self, images_folder, masks_folder, 
                  transform=None):
