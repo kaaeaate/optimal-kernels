@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import random
@@ -245,8 +246,8 @@ class LipstickDataset(Dataset):
         self.images_folder = images_folder
         self.masks_folder = masks_folder
 
-        self.images_names = np.sort(os.listdir(images_folder))
-        self.masks_names = np.sort(os.listdir(masks_folder))  
+        self.images_names = np.sort(os.listdir(images_folder))[::100]
+        self.masks_names = np.sort(os.listdir(masks_folder))[::100] 
         
         self.transform = transform
         self.to_tensor = ToTensor()
@@ -266,6 +267,6 @@ class LipstickDataset(Dataset):
             item_mask = transformed["mask"]
         
         item_image = self.to_tensor(item_image.copy())
-        item_mask = torch.from_numpy(item_mask.copy()).long()
+        item_mask = self.to_tensor(item_mask.copy()) #torch.from_numpy(item_mask.copy()).long()
 
         return item_image, item_mask    
