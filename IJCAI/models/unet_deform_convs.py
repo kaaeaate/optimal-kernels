@@ -23,10 +23,10 @@ def deform_and_conv(in_channels, out_channels, k_size):
 
 class UNet(nn.Module):
 
-    def __init__(self, n_class, k_size):
+    def __init__(self, in_chs, n_class):
         super().__init__()
                 
-        self.dconv_down1 = DeformConv2d(3, 64, kernel_size=3, padding=1, modulation=True)
+        self.dconv_down1 = DeformConv2d(in_chs, 64, kernel_size=3, padding=1, modulation=True)
 #         self.dconv_down1 = double_conv(3, 64)
         self.dconv_down2 = double_conv(64, 128)
 #         self.dconv_down3 = deform_and_conv(128, 256, k_size)

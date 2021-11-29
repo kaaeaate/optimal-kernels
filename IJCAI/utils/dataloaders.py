@@ -9,7 +9,7 @@ import cv2
 from torchvision.transforms import ToTensor
 import albumentations as A
 
-from data_preprocessing import get_lips_twins, get_train_test_dataset
+from utils.data_preprocessing import get_lips_twins, get_train_test_dataset
 
 class Birds_Dataset(Dataset):
     def __init__(self, 
