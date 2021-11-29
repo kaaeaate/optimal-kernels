@@ -13,7 +13,7 @@ import copy
 from collections import defaultdict
 
 
-def train_model(model, optimizer, scheduler, experiment_name, 
+def train_model(model, dataloaders, optimizer, scheduler, experiment_name, 
                 tensorboard=True, logs_base_dir='logs', 
                 save_weights=False, weights_folder='',
                 save_metrics=False, metrics_path='metrics_txt/model',

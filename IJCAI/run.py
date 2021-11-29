@@ -1,10 +1,22 @@
 import argparse
 import logging
+from pathlib import Path
+import torch
+import torch.optim as optim
+from torch.optim import lr_scheduler
+
 from train import train_model
+from utils.common import get_model, get_dataloaders
+
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument('-data_name', '--dataset_name', type=str, default='',
+                        help='Dataset name')
+    parser.add_argument('-data_path', '--dataset_path', type=str, default='',
+                        help='Dataset directory path')
     
     parser.add_argument('-device', '--device', type=str, default='cuda',
                         help='Cuda device number')
@@ -16,6 +28,9 @@ def get_args():
                         help='Scheduler name')
     parser.add_argument('-exp_name', '--experiment_name', type=str, default='test_run',
                         help='Experiment name')
+    parser.add_argument('-batch', '--batch_size', type=int, default=4,
+                        help='Train batch size')
+    
     
     parser.add_argument('-tb', '--tensorboard', type=bool, default=False,
                         help='Tensorboard option')
@@ -26,10 +41,20 @@ def get_args():
 
 
 if __name__ == '__main__':
+    args = get_args()
+    dataloaders = get_dataloaders(args)
+    
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = get_model(args)
+    model = model.to(device)
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=0.1)
+    exp_name = f'{args.experiment_name}_' + datetime.now().isoformat(timespec='minutes')
     
     args = get_args()
-    train_model(model=args.model,
-                optimizer=args.optimizer,
-                scheduler=args.scheduler,
-                experiment_name=args.experiment_name
-               )
+    model = train_model(model=args.model,
+                        dataloaders=dataloaders, 
+                        optimizer=optimizer,
+                        scheduler=exp_lr_scheduler,
+                        experiment_name=exp_name
+                       )
