@@ -6,7 +6,7 @@ from pathlib import Path
 
 import sys
 sys.path.append('../')
-from models import unet, attention_unet, lorck, unet_deform_convs
+from models import unet, attention_unet, lorck, unet_deform_convs, unet_init
 from utils.dataloaders import Birds_Dataset, Birds_OneCluster, ShapeDataset
 from utils.dataloaders import MNISTBinarDataset, PancreasDataset, LipstickDataset
 
@@ -20,6 +20,8 @@ def get_model(model_name, in_chs=3, out_chs=3):
         model = lorck.LORCK(in_chs,out_chs)
     elif model_name.lower() == 'def-convs':
         model = unet_deform_convs.UNet(in_chs,out_chs)
+    elif model_name.lower() == 'unet_init':
+        model = unet_init.UNet(in_chs,out_chs,k_size=15)
     else:
         print(f'Not implemented {model_name} model')        
     return model
@@ -63,5 +65,5 @@ dataset_dct = {
     'simple-shapes': ShapeDataset,
     'mnist-binar': MNISTBinarDataset,
     'pancreas': PancreasDataset,
-    'lipstick' LipstickDataset
+    'lipstick': LipstickDataset
 }
