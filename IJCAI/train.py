@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
-from F import binary_cross_entropy_with_logits as bce_with_logits
+from torch.nn.functional import binary_cross_entropy_with_logits as bce_with_logits
 from torch.utils.tensorboard import SummaryWriter
 from utils.loss import dice_loss, calc_loss, print_metrics
 from tqdm.notebook import tqdm
@@ -11,17 +11,21 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 import copy
 from collections import defaultdict
+from pathlib import Path
 
 
-def train_model(model, dataloaders, optimizer, scheduler, experiment_name, 
+def train_model(model, dataloaders, optimizer, scheduler, 
+                experiment_name, device,
                 tensorboard=True, logs_base_dir='logs', 
-                save_weights=False, weights_folder='',
+                save_weights=False, weights_path='weights/model',
                 save_metrics=False, metrics_path='metrics_txt/model',
+                add_loss_to_kernel=False,
                 num_epochs=25):
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
     best_dice = 0
     
+    logs_base_dir = Path(logs_base_dir)
     if tensorboard:
         writer = SummaryWriter(logs_base_dir / experiment_name)
 
@@ -63,12 +67,22 @@ def train_model(model, dataloaders, optimizer, scheduler, experiment_name,
                     if not add_loss_to_kernel:
                         loss = calc_loss(outputs, labels, metrics)
                     else:
+#                         print('Added loss to kernel')
                         loss_kernel = 0
-                        kernel = model.dconv_down1[0].weight.data
+                        try:
+                            kernel = model.dconv_down1[0].weight.data
+                        except:
+                            kernel = model.Conv_upd_x1.conv[0].weight.data
                         ups = nn.Upsample(size=kernel.shape[-1])
-                        labels_kernel = ups(labels)
-                        labels_kernel = (labels_kernel - labels_kernel.mean()) / labels_kernel.std()
-                        for i in range(0, kernel.shape[0]-batch_size_train+1, batch_size_train):
+                        l_kernel = ups(labels)
+                        l_kernel = (l_kernel - l_kernel.mean()) / l_kernel.std()                        
+
+                        if l_kernel.shape[1] != kernel.shape[1]:
+                            labels_kernel = torch.cat((l_kernel,l_kernel,l_kernel), 1)
+                        else:
+                            labels_kernel = l_kernel
+                        bs = labels.shape[0]
+                        for i in range(0, kernel.shape[0]-bs+1, bs):
                             loss_kernel += bce_with_logits(kernel[i:i+labels_kernel.shape[0]], 
                                                            labels_kernel)
                         loss_target = calc_loss(outputs, labels, metrics)
@@ -97,8 +111,8 @@ def train_model(model, dataloaders, optimizer, scheduler, experiment_name,
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
                 if save_weights:
-                    Path(weights_folder).mkdir(exist_ok=True)
-                    torch.save(model.state_dict(), f'./{weights_folder}/{experiment_name}.pth')
+                    Path(weights_path.split('/')[-2]).mkdir(exist_ok=True)
+                    torch.save(model.state_dict(), f'{weights_path}.pth')
             
             if phase == 'val' and dice_epoch > best_dice:
                 print("saving best DICE")
@@ -110,7 +124,8 @@ def train_model(model, dataloaders, optimizer, scheduler, experiment_name,
     print('Best val DICE: {:4f}'.format(best_dice))
     
     if save_metrics:
-        with open(f"./{metrics_folder}.txt","a") as the_file:
+        Path(metrics_path.split('/')[-2]).mkdir(exist_ok=True)
+        with open(f"{metrics_path}.txt","a") as the_file:
                 the_file.write('best DICE: {}\n'.format(best_dice))
 
     # load best model weights
