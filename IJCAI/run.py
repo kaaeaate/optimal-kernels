@@ -30,6 +30,8 @@ def get_args():
                         help='Experiment name')
     parser.add_argument('-batch', '--batch_size', type=int, default=4,
                         help='Train batch size')
+    parser.add_argument('-epochs', '--num_epochs', type=int, default=50,
+                        help='Train epochs number')
     
     
     parser.add_argument('-tb', '--tensorboard', type=bool, default=False,
@@ -51,10 +53,16 @@ if __name__ == '__main__':
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=0.1)
     exp_name = f'{args.experiment_name}_' + datetime.now().isoformat(timespec='minutes')
     
-    args = get_args()
-    model = train_model(model=args.model,
+    model = train_model(model=args.model, 
                         dataloaders=dataloaders, 
-                        optimizer=optimizer,
-                        scheduler=exp_lr_scheduler,
-                        experiment_name=exp_name
+                        optimizer=optimizer, 
+                        scheduler=exp_lr_scheduler, 
+                        experiment_name=exp_name, 
+                        device=device,
+                        tensorboard=args.tensorboard, 
+                        logs_base_dir=args.logs_dir, 
+                        save_weights=True, weights_path=f'./weights/{exp_name}',
+                        save_metrics=True, metrics_path=f'./metrics_txt/{file_name}',
+                        add_loss_to_kernel=True,
+                        num_epochs=args.num_epochs
                        )
