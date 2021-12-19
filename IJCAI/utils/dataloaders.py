@@ -283,8 +283,8 @@ class LipstickDataset(Dataset):
         self.images_folder = images_folder
         self.masks_folder = masks_folder
 
-        self.images_names = np.sort(os.listdir(images_folder))[::100]
-        self.masks_names = np.sort(os.listdir(masks_folder))[::100] 
+        self.images_names = np.sort(os.listdir(images_folder))#[::100]
+        self.masks_names = np.sort(os.listdir(masks_folder))#[::100] 
         
         self.transform = transform
         self.to_tensor = ToTensor()
@@ -293,17 +293,62 @@ class LipstickDataset(Dataset):
         return len(self.images_names)
     
     def __getitem__(self, idx):
+        
         item_image = np.asarray(Image.open(os.path.join(self.images_folder,
                                             self.images_names[idx])))
         item_mask = np.asarray(Image.open(os.path.join(self.masks_folder,
-                                              self.masks_names[idx])))[:,:,1]
+                                              self.masks_names[idx])))[:,:,1]          
+
+        if self.transform is not None:
+            transformed = self.transform(image=item_image, mask=item_mask)
+            item_image = transformed["image"]
+            item_mask = transformed["mask"]
+
+        item_image = self.to_tensor(item_image.copy())
+        item_mask = self.to_tensor(item_mask.copy()) #torch.from_numpy(item_mask.copy()).long()
+
+        return item_image, item_mask    
+    
+def mutiple_to_binar(label, num_classes=3):
+    new_label = torch.zeros((num_classes-1, label.shape[1], label.shape[2]))
+    for uniq_class in range(1, num_classes): 
+        layer = torch.where(label==uniq_class, 1, 0)
+        new_label[uniq_class-1] = layer
+    return new_label
+
+class MDSDataset(Dataset):
+    def __init__(self, images_folder, masks_folder, 
+                 transform=None,
+                 classes=2):
+        super(Dataset, self).__init__()
+        
+        self.images_folder = images_folder
+        self.masks_folder = masks_folder
+
+        self.images_names = np.sort(os.listdir(images_folder)) 
+        self.masks_names = np.sort(os.listdir(masks_folder))  
+        
+        self.transform = transform
+        self.to_tensor = ToTensor()
+        self.classes = classes
+
+    def __len__(self):
+        return len(self.images_names)
+    
+    def __getitem__(self, idx):
+        item_image = np.load(os.path.join(self.images_folder,
+                                            self.images_names[idx]))
+        item_mask = np.load(os.path.join(self.masks_folder,
+                                              self.masks_names[idx]))
         
         if self.transform is not None:
             transformed = self.transform(image=item_image, mask=item_mask)
             item_image = transformed["image"]
             item_mask = transformed["mask"]
-        
-        item_image = self.to_tensor(item_image.copy())
-        item_mask = self.to_tensor(item_mask.copy()) #torch.from_numpy(item_mask.copy()).long()
 
-        return item_image, item_mask    
+        item_image = self.to_tensor(item_image.copy())
+        item_mask = self.to_tensor(item_mask.copy())
+        if self.classes > 2:
+            item_mask = mutiple_to_binar(item_mask, num_classes=self.classes)
+
+        return item_image, item_mask
