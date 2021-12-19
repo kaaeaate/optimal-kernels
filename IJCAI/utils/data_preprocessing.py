@@ -9,6 +9,7 @@ from torchvision.transforms import ToTensor
 
 from sklearn.model_selection import train_test_split
 import shutil
+from pathlib import Path
 
 
 def get_lips_twins(images_path, masks_path):
@@ -24,9 +25,15 @@ def get_lips_twins(images_path, masks_path):
 def get_train_test_dataset(dataset_path, images_path, masks_path,
                            dataset_dir, train_fold, test_fold,
                            img_fold, masks_fold, test_size = 0.3):
-    
-    images, masks = get_lips_twins(images_path = dataset_path / images_path,
-                                   masks_path = dataset_path / masks_path)
+        
+    if dataset_path.split('/')[-1] == 'Lipstick':
+        dataset_path = Path(dataset_path)
+        images, masks = get_lips_twins(images_path = dataset_path / images_path,
+                                       masks_path = dataset_path / masks_path)
+    else:
+        dataset_path = Path(dataset_path)
+        images = sorted(os.listdir(dataset_path / images_path))
+        masks = sorted(os.listdir(dataset_path / masks_path))
     
     train_x, test_x, train_y, test_y = train_test_split(images, masks, test_size=test_size)
     
