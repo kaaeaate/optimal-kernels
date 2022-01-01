@@ -12,6 +12,14 @@ import shutil
 from pathlib import Path
 
 
+def multiclass_to_binary(mask, class_num=3):
+    device = mask.device
+    new_mask = torch.zeros((class_num, mask.shape[-2], mask.shape[-1]))
+    new_mask = new_mask.to(device)
+    for i in range(class_num):
+        new_mask[i,:,:] = torch.where(mask==i+1, 1, 0)
+    return new_mask
+
 def get_lips_twins(images_path, masks_path):
     imgs = sorted(os.listdir(images_path))
     masks = sorted(os.listdir(masks_path))
