@@ -9,7 +9,7 @@ import cv2
 from torchvision.transforms import ToTensor
 import albumentations as A
 
-from utils.data_preprocessing import get_lips_twins, get_train_test_dataset
+from utils.data_preprocessing import get_lips_twins, get_train_test_dataset, multiclass_to_binary
 
 class Birds_Dataset(Dataset):
     def __init__(self, 
@@ -309,12 +309,6 @@ class LipstickDataset(Dataset):
 
         return item_image, item_mask    
     
-def mutiple_to_binar(label, num_classes=3):
-    new_label = torch.zeros((num_classes-1, label.shape[1], label.shape[2]))
-    for uniq_class in range(1, num_classes): 
-        layer = torch.where(label==uniq_class, 1, 0)
-        new_label[uniq_class-1] = layer
-    return new_label
 
 class MDSDataset(Dataset):
     def __init__(self, images_folder, masks_folder, 
@@ -349,6 +343,37 @@ class MDSDataset(Dataset):
         item_image = self.to_tensor(item_image.copy())
         item_mask = self.to_tensor(item_mask.copy())
         if self.classes > 2:
-            item_mask = mutiple_to_binar(item_mask, num_classes=self.classes)
+            item_mask = multiclass_to_binary(item_mask, num_classes=self.classes)
 
         return item_image, item_mask
+    
+    
+class ACDCDataset(torch.utils.data.Dataset):
+    CLASSES = {0: 'NOR', 1: 'MINF', 2: 'DCM', 3: 'HCM', 4: 'RV'}
+
+    def __init__(self, hf_path, device):
+        super().__init__()
+        self.device = device
+        self.hf = h5py.File(hf_path)
+
+    def __len__(self) -> int:
+        return len(self.hf)
+
+    def __getitem__(self, item: int):
+        img = self.hf[str(item)][:1]
+        mask = self.hf[str(item)][1:]
+        c = self.hf[str(item)].attrs['class']
+        img = torch.tensor(img).float()
+        mask = torch.tensor(mask)
+        binary_mask = multiclass_to_binary(mask)
+        mean = img.mean()
+        std = img.std()
+        img = (img - mean) / (std + 1e-11)
+        return dict(
+            c=c, 
+            mask=mask.to(self.device),
+            binary_mask = binary_mask.to(self.device),
+            img=img.to(self.device), 
+            mean=mean[None, None, None].to(self.device), 
+            std=std[None, None, None].to(self.device)
+        )
