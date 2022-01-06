@@ -369,11 +369,4 @@ class ACDCDataset(torch.utils.data.Dataset):
         mean = img.mean()
         std = img.std()
         img = (img - mean) / (std + 1e-11)
-        return dict(
-            c=c, 
-            mask=mask.to(self.device),
-            binary_mask = binary_mask.to(self.device),
-            img=img.to(self.device), 
-            mean=mean[None, None, None].to(self.device), 
-            std=std[None, None, None].to(self.device)
-        )
+        return img, binary_mask
