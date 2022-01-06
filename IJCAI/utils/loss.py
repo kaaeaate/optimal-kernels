@@ -14,15 +14,26 @@ def dice_loss(pred, target, smooth = 1.):
     return loss.mean()
 
 def calc_loss(pred, target, metrics, bce_weight=0.5):
-    bce = F.binary_cross_entropy_with_logits(pred, target)
-        
-    pred = F.sigmoid(pred)
-    dice = dice_loss(pred, target)
+    loss_lst = []
+    dice_lst = []
+#     print('target', target.shape)
+#     print('pred', pred.shape)
+    for i in range(3):
+        bce = F.binary_cross_entropy_with_logits(pred[:, i].unsqueeze(1), 
+                                                 target[:, i].unsqueeze(1))
+
+        pred_new = F.sigmoid(pred[:, i].unsqueeze(1))
+        dice = dice_loss(pred_new, target[:, i].unsqueeze(1))
+        metrics[f'dice_{i}'] += (1. - dice.data.cpu().numpy()) * target.size(0)
     
-    loss = bce * bce_weight + dice * (1 - bce_weight)
+        loss_cl = bce * bce_weight + dice * (1 - bce_weight)
+        loss_lst.append(loss_cl)
+        dice_lst.append(dice)
+    loss = sum(loss_lst) / 3
+    dice_full = sum(dice_lst) / 3
     
-    metrics['bce'] += bce.data.cpu().numpy() * target.size(0)
-    metrics['dice'] += (1. - dice.data.cpu().numpy()) * target.size(0)
+#     metrics['bce'] += bce.data.cpu().numpy() * target.size(0)
+    metrics['dice'] += (1. - dice_full.data.cpu().numpy()) * target.size(0)
     metrics['loss'] += loss.data.cpu().numpy() * target.size(0)
     
     return loss
