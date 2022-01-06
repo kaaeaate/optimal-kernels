@@ -26,6 +26,7 @@ def train_model(model, dataloaders, optimizer, scheduler,
     best_dice = 0
     
     logs_base_dir = Path(logs_base_dir)
+    logs_base_dir.mkdir(exist_ok=True)
     if tensorboard:
         writer = SummaryWriter(logs_base_dir / experiment_name)
 
@@ -111,7 +112,7 @@ def train_model(model, dataloaders, optimizer, scheduler,
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
                 if save_weights:
-                    Path(weights_path.split('/')[-2]).mkdir(exist_ok=True)
+                    Path(weights_path.split('/')[-3] + '/' + weights_path.split('/')[-2]).mkdir(exist_ok=True)
                     torch.save(model.state_dict(), f'{weights_path}.pth')
             
             if phase == 'val' and dice_epoch > best_dice:
@@ -124,7 +125,7 @@ def train_model(model, dataloaders, optimizer, scheduler,
     print('Best val DICE: {:4f}'.format(best_dice))
     
     if save_metrics:
-        Path(metrics_path.split('/')[-2]).mkdir(exist_ok=True)
+        Path(metrics_path.split('/')[-3] + '/' + metrics_path.split('/')[-2]).mkdir(exist_ok=True)
         with open(f"{metrics_path}.txt","a") as the_file:
                 the_file.write('best DICE: {}\n'.format(best_dice))
 
