@@ -124,7 +124,7 @@ class Birds_OneCluster(Dataset):
             item_image = self.img_transform(item_image)
         if self.masks_transform is not None:  
             random.seed(SEED)
-            item_mask = self.masks_transform(item_mask)
+            item_mask = self.masks_transform(item_mask)[0].unsqueeze(0)
 
         return item_image, item_mask
 
