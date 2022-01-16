@@ -13,7 +13,21 @@ def dice_loss(pred, target, smooth = 1.):
     
     return loss.mean()
 
-def calc_loss(pred, target, metrics, bce_weight=0.5):
+def calc_loss_binary(pred, target, metrics, bce_weight=0.5):
+    bce = F.binary_cross_entropy_with_logits(pred, target)
+
+    pred = F.sigmoid(pred)
+    dice = dice_loss(pred, target)
+
+    loss = bce * bce_weight + dice * (1 - bce_weight)
+
+    metrics['bce'] += bce.data.cpu().numpy() * target.size(0)
+    metrics['dice'] += (1. - dice.data.cpu().numpy()) * target.size(0)
+    metrics['loss'] += loss.data.cpu().numpy() * target.size(0)
+
+    return loss
+
+def calc_loss_multiclass(pred, target, metrics, bce_weight=0.5):
     loss_lst = []
     dice_lst = []
 #     print('target', target.shape)
@@ -36,6 +50,13 @@ def calc_loss(pred, target, metrics, bce_weight=0.5):
     metrics['dice'] += (1. - dice_full.data.cpu().numpy()) * target.size(0)
     metrics['loss'] += loss.data.cpu().numpy() * target.size(0)
     
+    return loss
+
+def calc_loss(pred, target, metrics, bce_weight=0.5, regime='multiclass'):
+    if regime == 'multiclass':
+        loss  = calc_loss_multiclass(pred, target, metrics, bce_weight=0.5)
+    else:
+        loss  = calc_loss_binary(pred, target, metrics, bce_weight=0.5)
     return loss
 
 def print_metrics(metrics, epoch_samples, phase):    
