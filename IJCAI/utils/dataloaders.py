@@ -371,3 +371,35 @@ class ACDCDataset(torch.utils.data.Dataset):
         std = img.std()
         img = (img - mean) / (std + 1e-11)
         return img, binary_mask
+    
+    
+class MNISTMulticlassDataset(Dataset):
+    def __init__(self, images_folder, masks_folder, 
+                 transform=None):
+        super(Dataset, self).__init__()
+        
+        self.images_folder = images_folder
+        self.masks_folder = masks_folder
+
+        self.images_names = np.load((self.images_folder))
+        self.masks_names = np.load((self.masks_folder))
+        
+        self.to_tensor = ToTensor()
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.images_names)
+    
+    def __getitem__(self, idx):
+        item_image = self.images_names[idx]
+        item_mask = self.masks_names[idx]
+        
+        if self.transform is not None:
+            transformed = self.transform(image=item_image, mask=item_mask)
+            item_image = transformed["image"]
+            item_mask = transformed["mask"]
+
+        item_image = self.to_tensor(item_image.copy())
+        item_mask = self.to_tensor(item_mask.copy())
+
+        return item_image, item_mask
