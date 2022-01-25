@@ -30,9 +30,7 @@ def calc_loss_binary(pred, target, metrics, bce_weight=0.5):
 def calc_loss_multiclass(pred, target, metrics, bce_weight=0.5):
     loss_lst = []
     dice_lst = []
-#     print('target', target.shape)
-#     print('pred', pred.shape)
-    for i in range(3):
+    for i in range(pred.shape[1]):
         bce = F.binary_cross_entropy_with_logits(pred[:, i].unsqueeze(1), 
                                                  target[:, i].unsqueeze(1))
 
