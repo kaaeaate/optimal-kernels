@@ -5,6 +5,17 @@ import os
 from pathlib import Path
 import io
 
+dict_colors = {'green': (1,128,1), 
+               'black': (1, 1, 1), 
+               'blue': (1,1,255), 
+               'brown': (139,69,19), 
+               'yellow': (255,255,1), 
+               'deeppink': (255,20,147), 
+               'orange': (255,165,1), 
+               'purple': (138,43,226), 
+               'white': (254,254,254),
+               'pink': (255,192,203)
+              }
 
 def triangle_with_color(width, height, color):
     img_triangle = np.ones((width, height, 3), np.uint8) * 0
@@ -30,6 +41,7 @@ def triangle_with_color(width, height, color):
     img_color = dict_colors[color]
 
     cv2.drawContours(img_triangle, [triangle], 0, img_color, -1)
+#     cv2.drawContours(img_triangle, [triangle], 0, (255,255,255), -1)
     cv2.drawContours(mask_triangle, [triangle], 0, (255,255,255), -1)
 
     return img_triangle, mask_triangle
