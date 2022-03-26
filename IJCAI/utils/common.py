@@ -6,11 +6,11 @@ from pathlib import Path
 
 import sys
 sys.path.append('../')
-from models import unet, attention_unet, lorck, unet_deform_convs, unet_init
+from models import unet, attention_unet, lorck, unet_deform_convs, unet_init, unet_fourier, hybrid, hybrid2
 from utils.dataloaders import Birds_Dataset, Birds_OneCluster, ShapeDataset
 from utils.dataloaders import MNISTBinarDataset, PancreasDataset, LipstickDataset
 
-def get_model(model_name, in_chs=3, out_chs=3, k_size=15):
+def get_model(model_name, in_chs=3, out_chs=3, k_size=15, order=10, kk2_size=15):
     
     if model_name.lower() == 'unet':
         model = unet.UNet(in_chs,out_chs)
@@ -22,6 +22,12 @@ def get_model(model_name, in_chs=3, out_chs=3, k_size=15):
         model = unet_deform_convs.UNet(in_chs,out_chs)
     elif model_name.lower() == 'unet_init':
         model = unet_init.UNet(in_chs,out_chs,k_size=k_size)
+    elif model_name.lower() == 'unet_fourier':
+        model = unet_fourier.FourierUNet(in_chs,out_chs,k_size=k_size, order=order)
+    elif model_name.lower() == 'hybrid':
+        model = hybrid.Hybrid(in_chs,out_chs,k_size=k_size, kk2_size=kk2_size)
+    elif model_name.lower() == 'hybrid2':
+        model = hybrid2.Hybrid(in_chs,out_chs,k_size=k_size, kk2_size=kk2_size)
     else:
         print(f'Not implemented {model_name} model')        
     return model

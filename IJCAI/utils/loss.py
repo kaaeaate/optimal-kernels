@@ -41,8 +41,8 @@ def calc_loss_multiclass(pred, target, metrics, bce_weight=0.5):
         loss_cl = bce * bce_weight + dice * (1 - bce_weight)
         loss_lst.append(loss_cl)
         dice_lst.append(dice)
-    loss = sum(loss_lst) / 3
-    dice_full = sum(dice_lst) / 3
+    loss = sum(loss_lst) / pred.shape[1]
+    dice_full = sum(dice_lst) / pred.shape[1]
     
 #     metrics['bce'] += bce.data.cpu().numpy() * target.size(0)
     metrics['dice'] += (1. - dice_full.data.cpu().numpy()) * target.size(0)

@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
-from .deformable_convs.deform_conv_v2 import DeformConv2d
+import sys
+sys.path.insert(1, '/home/e_radionova/PROJECT/optimal-kernels/IJCAI/models')
+from deformable_convs.deform_conv_v2 import DeformConv2d
 
 
 def double_conv(in_channels, out_channels):
