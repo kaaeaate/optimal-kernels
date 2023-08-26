@@ -24,4 +24,4 @@ And also for **ACDC** dataset:
 ![](imgs/acdc.png)
 
 ### DICE vs kernel size dependence on Caltech Birds clusters
-<img src="imgs/plots_birds.png" width="200">
+<img src="imgs/plots_birds.png" width="1000">
