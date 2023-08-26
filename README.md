@@ -15,9 +15,7 @@ Train the model:
 ```python
 python3 train.py --model_type hybrid --weights ./weights/model.pth
 ```
-Inference:
-```python
-python3 inference.py --model_type hybrid --weights ./weights/model.pth
-```
 
 ## Results
+![](imgs/birds.png)
+![](imgs/acdc.png)
