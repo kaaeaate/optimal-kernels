@@ -13,7 +13,7 @@ conda activate optimal_kernels
 
 Train the model:
 ```python
-python3 train.py --model_type hybrid --weights ./weights/model.pth
+python3 run.py --model hybrid --dataset_name birds --dataset_path path_to/Caltech-Birds
 ```
 
 ## Results
