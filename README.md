@@ -18,7 +18,10 @@ python3 train.py --model_type hybrid --weights ./weights/model.pth
 
 ## Results
 Results on the validation subset of **Caltech Birds** dataset for baselines and our the best methods:
-![](imgs/birds.png)
+<img src="imgs/birds.png" width="800">
 
 And also for **ACDC** dataset:
-![](imgs/acdc.png)
+<img src="imgs/acdc.png" width="800">
+
+### DICE vs kernel size dependence on Caltech Birds clusters
+<img src="imgs/plots_birds.png" width="700">
