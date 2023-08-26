@@ -17,7 +17,7 @@ python3 train.py --model_type hybrid --weights ./weights/model.pth
 ```
 
 ## Results
-### Results on the validation subset of Caltech Birds dataset for baselines and our the best methods:
+Results on the validation subset of **Caltech Birds** dataset for baselines and our the best methods:
 ![](imgs/birds.png)
-### And also for ACDC dataset:
+And also for **ACDC** dataset:
 ![](imgs/acdc.png)
