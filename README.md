@@ -7,7 +7,7 @@ We propose a new model, in which kernels of convolutional layers try to be simil
 ## Getting started
 You can create and activate an anaconda environment:
 ```commandline
-conda env create -f environment.yml
+conda env create -f environment.yml --name optimal_kernels
 conda activate optimal_kernels
 ```
 
