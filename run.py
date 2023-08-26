@@ -20,7 +20,7 @@ def get_args():
     
     parser.add_argument('-device', '--device', type=str, default='cuda',
                         help='Cuda device number')
-    parser.add_argument('-model', '--model', type=str, default='U-Net',
+    parser.add_argument('-model', '--model', type=str, default='unet',
                         help='Model name')
     parser.add_argument('-optimizer', '--optimizer', type=str, default='Adam',
                         help='Optimizer name')
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     dataloaders = get_dataloader(args)
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = get_model(args)
+    model = get_model(args.model)
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=10, gamma=0.1)

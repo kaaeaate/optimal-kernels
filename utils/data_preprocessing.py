@@ -71,4 +71,3 @@ def get_train_test_dataset(dataset_path, images_path, masks_path,
         shutil.copyfile(dataset_path / images_path / img, val_dir_imgs / img)
     for mask in test_y:
         shutil.copyfile(dataset_path / masks_path / mask, val_dir_masks / mask) 
-        
