@@ -22,3 +22,6 @@ Results on the validation subset of **Caltech Birds** dataset for baselines and 
 
 And also for **ACDC** dataset:
 ![](imgs/acdc.png)
+
+### DICE vs kernel size dependence on Caltech Birds clusters
+![](imgs/plots_birds.png)
